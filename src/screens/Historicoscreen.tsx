@@ -1,13 +1,16 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
+
 import {
   View,
   Text,
-  StyleSheet,
+ StyleSheet,
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   Modal,
 } from 'react-native';
+
+import { useFocusEffect } from '@react-navigation/native';
 
 import { api } from '../services/api';
 
@@ -16,7 +19,10 @@ import SensorCard from '../components/SensorCard';
 import ReservatorioCard from '../components/ReservatorioCard';
 import ClimatizacaoCard from '../components/ClimatizacaoCard';
 
+import { historicoStorage } from '../storage/historicoStorage';
+
 export default function HistoricoScreen() {
+
   const [alertas, setAlertas] = useState<any[]>([]);
   const [sensores, setSensores] = useState<any[]>([]);
   const [reservatorios, setReservatorios] = useState<any[]>([]);
@@ -27,7 +33,11 @@ export default function HistoricoScreen() {
   const [modalVisible, setModalVisible] = useState(false);
 
   const carregarHistorico = async () => {
+
     try {
+
+      const ocultos = historicoStorage.obterOcultos();
+
       const [a, s, r, c] = await Promise.all([
         api.getAlertas(),
         api.getSensores(),
@@ -35,55 +45,123 @@ export default function HistoricoScreen() {
         api.getClimatizacao(),
       ]);
 
-      setAlertas(a.filter((item: any) =>
-        item.nivel === 'CRITICO' || item.nivel === 'AVISO'
-      ));
+      const alertasFiltrados = a.filter((item: any) => {
 
-      setSensores(s.filter((item: any) =>
-        item.status === 'DEFEITO' || item.status === 'MANUTENCAO'
-      ));
+        const chave = `alerta-${item.id}`;
 
-      setReservatorios(r.filter((item: any) =>
-        item.status === 'CRITICO' || item.status === 'ALERTA'
-      ));
+        return (
+          (item.nivel === 'CRITICO' || item.nivel === 'AVISO')
+          &&
+          !ocultos.includes(chave)
+        );
 
-      setClimatizacao(c.filter((item: any) =>
-        item.status === 'CRITICO' || item.status === 'ALERTA'
-      ));
+      });
+
+      const sensoresFiltrados = s.filter((item: any) => {
+
+        const chave = `sensor-${item.id}`;
+
+        return (
+          (item.status === 'DEFEITO' || item.status === 'MANUTENCAO')
+          &&
+          !ocultos.includes(chave)
+        );
+
+      });
+
+      const reservatoriosFiltrados = r.filter((item: any) => {
+
+        const chave = `reservatorio-${item.id}`;
+
+        return (
+          (item.status === 'CRITICO' || item.status === 'ALERTA')
+          &&
+          !ocultos.includes(chave)
+        );
+
+      });
+
+      const climatizacaoFiltrada = c.filter((item: any) => {
+
+        const chave = `climatizacao-${item.id}`;
+
+        return (
+          (item.status === 'CRITICO' || item.status === 'ALERTA')
+          &&
+          !ocultos.includes(chave)
+        );
+
+      });
+
+      setAlertas(alertasFiltrados);
+      setSensores(sensoresFiltrados);
+      setReservatorios(reservatoriosFiltrados);
+      setClimatizacao(climatizacaoFiltrada);
 
     } catch (error) {
+
       console.log(error);
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
 
-  useEffect(() => {
-    carregarHistorico();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      carregarHistorico();
+    }, [])
+  );
 
   const limparHistoricoVisual = () => {
+
+    const chaves = [
+
+      ...alertas.map(i => `alerta-${i.id}`),
+
+      ...sensores.map(i => `sensor-${i.id}`),
+
+      ...reservatorios.map(i => `reservatorio-${i.id}`),
+
+      ...climatizacao.map(i => `climatizacao-${i.id}`),
+
+    ];
+
+    historicoStorage.adicionarOcultos(chaves);
+
     setAlertas([]);
     setSensores([]);
     setReservatorios([]);
     setClimatizacao([]);
+
     setModalVisible(false);
+
   };
 
   if (loading) {
+
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#4A90D9" />
-        <Text style={styles.loadingText}>Carregando histórico...</Text>
+        <Text style={styles.loadingText}>
+          Carregando histórico...
+        </Text>
       </View>
     );
+
   }
 
   return (
+
     <View style={styles.container}>
 
       <Modal visible={modalVisible} transparent animationType="fade">
+
         <View style={styles.modalOverlay}>
+
           <View style={styles.modalBox}>
 
             <Text style={styles.modalTitle}>
@@ -100,27 +178,38 @@ export default function HistoricoScreen() {
                 style={styles.cancelButton}
                 onPress={() => setModalVisible(false)}
               >
-                <Text style={styles.cancelText}>Cancelar</Text>
+                <Text style={styles.cancelText}>
+                  Cancelar
+                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
                 style={styles.confirmButton}
                 onPress={limparHistoricoVisual}
               >
-                <Text style={styles.confirmText}>Limpar</Text>
+                <Text style={styles.confirmText}>
+                  Limpar
+                </Text>
               </TouchableOpacity>
 
             </View>
 
           </View>
+
         </View>
+
       </Modal>
 
       <View style={styles.header}>
-        <Text style={styles.title}>Histórico</Text>
+
+        <Text style={styles.title}>
+          Histórico
+        </Text>
+
         <Text style={styles.subtitle}>
           Eventos críticos e alertas da base lunar
         </Text>
+
       </View>
 
       <ScrollView contentContainerStyle={styles.list}>
@@ -145,9 +234,11 @@ export default function HistoricoScreen() {
           sensores.length === 0 &&
           reservatorios.length === 0 &&
           climatizacao.length === 0 && (
+
             <Text style={styles.emptyText}>
               Nenhum evento encontrado.
             </Text>
+
           )}
 
         <View style={{ height: 120 }} />
@@ -164,10 +255,13 @@ export default function HistoricoScreen() {
       </TouchableOpacity>
 
     </View>
+
   );
+
 }
 
 const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: '#12121E',
@@ -293,4 +387,5 @@ const styles = StyleSheet.create({
     color: '#FF4444',
     fontWeight: 'bold',
   },
+
 });
