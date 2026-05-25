@@ -4,6 +4,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
 import DashboardScreen from '../screens/DashboardScreen';
 import Historicoscreen from '../screens/Historicoscreen';
+import CadastroScreen from '../screens/CadastroScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -22,6 +23,7 @@ export default function AppNavigator() {
           tabBarInactiveTintColor: '#888',
         }}
       >
+
         <Tab.Screen
           name="Dashboard"
           component={DashboardScreen}
@@ -37,6 +39,15 @@ export default function AppNavigator() {
             tabBarLabel: 'Histórico',
           }}
         />
+
+        <Tab.Screen
+          name="Cadastro"
+          component={CadastroScreen}
+          options={{
+            tabBarLabel: 'Cadastro',
+          }}
+        />
+
       </Tab.Navigator>
     </NavigationContainer>
   );
