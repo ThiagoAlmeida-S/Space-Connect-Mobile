@@ -1,6 +1,7 @@
 const API_BASE_URL = 'http://localhost:8080';
 
 export const api = {
+
   // Sensores
   getSensores: async () => {
     const response = await fetch(`${API_BASE_URL}/sensores`);
@@ -8,11 +9,25 @@ export const api = {
     return response.json();
   },
 
+  criarSensor: async (sensor: object) => {
+    const response = await fetch(`${API_BASE_URL}/sensores`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sensor),
+    });
+
+    if (!response.ok) throw new Error('Erro ao criar sensor');
+
+    return response.json();
+  },
+
   simularSensor: async (id: number) => {
     const response = await fetch(`${API_BASE_URL}/sensores/simular/${id}`, {
       method: 'POST',
     });
+
     if (!response.ok) throw new Error('Erro ao simular sensor');
+
     return response.json();
   },
 
@@ -23,11 +38,25 @@ export const api = {
     return response.json();
   },
 
+  criarReservatorio: async (reservatorio: object) => {
+    const response = await fetch(`${API_BASE_URL}/reservatorios`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(reservatorio),
+    });
+
+    if (!response.ok) throw new Error('Erro ao criar reservatório');
+
+    return response.json();
+  },
+
   simularReservatorio: async (id: number) => {
     const response = await fetch(`${API_BASE_URL}/reservatorios/simular/${id}`, {
       method: 'POST',
     });
+
     if (!response.ok) throw new Error('Erro ao simular reservatório');
+
     return response.json();
   },
 
@@ -42,7 +71,9 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/climatizacao/simular/${id}`, {
       method: 'POST',
     });
+
     if (!response.ok) throw new Error('Erro ao simular climatização');
+
     return response.json();
   },
 
@@ -59,7 +90,9 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(alerta),
     });
+
     if (!response.ok) throw new Error('Erro ao criar alerta');
+
     return response.json();
   },
 
@@ -76,7 +109,9 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(tripulante),
     });
+
     if (!response.ok) throw new Error('Erro ao criar tripulante');
+
     return response.json();
   },
 
@@ -93,7 +128,9 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(consumo),
     });
+
     if (!response.ok) throw new Error('Erro ao criar consumo');
+
     return response.json();
   },
 };
